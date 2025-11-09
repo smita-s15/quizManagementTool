@@ -13,7 +13,7 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 py-12 px-6">
+    <div className="min-h-screen bg-linear-to-br from-indigo-50 to-blue-50 py-12 px-6">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-indigo-700 mb-3">Quiz App</h1>

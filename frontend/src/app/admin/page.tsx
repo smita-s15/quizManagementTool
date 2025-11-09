@@ -60,6 +60,9 @@ export default function AdminPanel() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-indigo-50 via-white to-blue-50 py-10 px-4">
+      <Link href="/" className="text-black">
+        Home
+      </Link>
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h1 className="text-4xl font-bold text-center text-indigo-700 mb-8">
@@ -86,7 +89,7 @@ export default function AdminPanel() {
               style={{ transform: `translateX(-${currentIndex * 100}%)` }}
             >
               {questions.map((q, idx) => (
-                <div key={idx} className="w-full flex-shrink-0 px-2">
+                <div key={idx} className="w-full shrink-0 px-2">
                   <QuestionForm
                     question={q}
                     setQuestion={(updated) => updateQuestion(idx, updated)}
