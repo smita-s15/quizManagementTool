@@ -13,3 +13,11 @@ export interface Quiz {
   title: string;
   questions: Question[];
 }
+
+export interface Quiz {
+  id?: string;
+  title: string;
+  questions: Question[];
+}
+
+export type CreateQuizPayload = Omit<Quiz, "id">; // ← This is required

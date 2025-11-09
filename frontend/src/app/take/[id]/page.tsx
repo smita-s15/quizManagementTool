@@ -5,6 +5,7 @@ import { Question, Quiz } from "@/types/quiz";
 import { dummyQuiz } from "@/staticdata";
 
 export default function PublicQuizPage() {
+  
   const quiz = dummyQuiz;
 
   const [answers, setAnswers] = useState<string[]>(

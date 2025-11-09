@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import QuestionForm from "../../components/QuestionForm";
-import { Question, Quiz } from "../../types/quiz";
+import { CreateQuizPayload, Question, Quiz } from "../../types/quiz";
 import { createQuiz } from "@/lib/api";
 
 export default function AdminPanel() {
@@ -45,28 +45,20 @@ export default function AdminPanel() {
   const goPrev = () => {
     if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
   };
-
   const handleSubmit = async () => {
-    if (!quizTitle.trim()) return alert("Quiz title is required.");
-    if (questions.length === 0) return alert("Add at least one question.");
-    if (questions.some((q) => !q.text.trim() || !q.answer.trim()))
-      return alert("All questions must have text and a correct answer.");
-
-    const payload: Omit<Quiz, "id"> = { title: quizTitle, questions };
+    const payload: CreateQuizPayload = { title: quizTitle, questions };
     try {
-      const res = await createQuiz(payload);
-      alert(`Quiz created! ID: ${res.id}`);
+      const savedQuiz = await createQuiz(payload);
+      alert(`Quiz created! ID: ${savedQuiz.id}`);
       setQuizTitle("");
       setQuestions([]);
-      setCurrentIndex(0);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to save quiz.");
+    } catch (err: any) {
+      alert(err.message);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 py-10 px-4">
+    <div className="min-h-screen bg-linear-to-br from-indigo-50 via-white to-blue-50 py-10 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h1 className="text-4xl font-bold text-center text-indigo-700 mb-8">

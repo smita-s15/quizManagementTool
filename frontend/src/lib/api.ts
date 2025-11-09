@@ -1,70 +1,55 @@
 // lib/api.ts
-import { Quiz } from "../types/quiz";
+const API_BASE = "http://localhost:8000";
 
-// Extend Quiz type to include optional id for frontend/demo purposes
-export interface QuizWithID extends Quiz {
-  id?: string | number;
+export interface Question {
+  text: string;
+  type: "mcq" | "truefalse" | "text";
+  options?: string[];
+  answer: string;
 }
 
-// Mock storage for demo
-const mockQuizzes: Record<string, QuizWithID> = {
-  "1": {
-    id: "1",
-    title: "General Knowledge",
-    questions: [
-      {
-        text: "What is the capital of France?",
-        type: "mcq",
-        options: ["London", "Berlin", "Paris", "Madrid"],
-        answer: "Paris",
-      },
-      {
-        text: "The Earth is flat.",
-        type: "truefalse",
-        options: ["True", "False"],
-        answer: "False",
-      },
-      {
-        text: "What is 2 + 2?",
-        type: "text",
-        options: [],
-        answer: "4",
-      },
-    ],
-  },
+export interface Quiz {
+  id: string;
+  title: string;
+  questions: Question[];
+}
+
+export type CreateQuizPayload = Omit<Quiz, "id">;
+
+export interface SubmitResult {
+  score: number;
+  total: number;
+  percentage: number;
+}
+
+// CREATE QUIZ
+export const createQuiz = async (payload: CreateQuizPayload): Promise<Quiz> => {
+  const res = await fetch(`${API_BASE}/quizzes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error((await res.json()).detail || "Failed to create");
+  return res.json();
 };
 
-/**
- * Create a quiz (mock implementation)
- */
-export async function createQuiz(quiz: Quiz): Promise<QuizWithID> {
-  // Simulate network delay
-  await new Promise((res) => setTimeout(res, 1000));
+// GET ALL QUIZZES
+export const getQuizzes = async (): Promise<Quiz[]> => {
+  const res = await fetch(`${API_BASE}/quizzes`);
+  if (!res.ok) throw new Error("Failed to fetch quizzes");
+  return res.json();
+};
 
-  // Generate ID and save to mock storage
-  const id = Date.now().toString();
-  const savedQuiz: QuizWithID = { id, ...quiz };
-  mockQuizzes[id] = savedQuiz;
-
-  console.log("Saved quiz:", savedQuiz);
-  return savedQuiz;
-}
-
-/**
- * Fetch quiz by ID (mock implementation)
- */
-export async function fetchQuiz(id: string): Promise<QuizWithID> {
-  await new Promise((res) => setTimeout(res, 600)); // simulate network
-
-  const quiz = mockQuizzes[id];
-  if (!quiz) throw new Error("Quiz not found");
-
-  return quiz;
-}
-
-// lib/api.ts
-export const getQuiz = async (id: string): Promise<Quiz> => {
-  const res = await fetch(`/api/quiz/${id}`);
-  if (!res.ok) throw new Error("Quiz not found");
+// SUBMIT QUIZ
+export const submitQuiz = async (
+  quizId: string,
+  answers: string[]
+): Promise<SubmitResult> => {
+  const res = await fetch(`${API_BASE}/quizzes/${quizId}/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ answers }),
+  });
+  if (!res.ok) throw new Error("Submission failed");
   return res.json();
 };

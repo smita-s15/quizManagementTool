@@ -1,13 +1,21 @@
+
 # app/main.py
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from app.models import Quiz, Submission
-from app.crud import get_quiz, submit_quiz
+from pydantic import BaseModel
+from typing import List
+import uuid
+
+from app.models import Quiz, Question, Submission
 from app.database import quizzes
+from app.crud import get_quiz, submit_quiz
 
-app = FastAPI(title="Quiz API - PyMongo Sync")
+app = FastAPI(title="Quiz API - User Endpoints")
 
-# CORS for Next.js
+class CreateQuizPayload(BaseModel):
+    title: str
+    questions: List[Question]
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -16,7 +24,43 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Seed sample quiz on startup
+# ————————————————————————
+# 1. GET ALL QUIZZES
+# ————————————————————————
+@app.get("/quizzes", response_model=List[Quiz])
+def list_quizzes():
+    """Return all quizzes (title + id + question count)"""
+    cursor = quizzes.find({}, {"_id": 0})  # Exclude MongoDB _id
+    return list(cursor)
+
+
+# ————————————————————————
+# 2. GET ONE QUIZ BY ID
+# ————————————————————————
+@app.get("/quizzes/{quiz_id}", response_model=Quiz)
+def fetch_quiz(quiz_id: str):
+    """Fetch a single quiz by its ID"""
+    quiz = get_quiz(quiz_id)
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    return quiz
+
+
+# ————————————————————————
+# 3. SUBMIT QUIZ & GET SCORE
+# ————————————————————————
+@app.post("/quizzes/{quiz_id}/submit", response_model=dict)
+def submit_answers(quiz_id: str, submission: Submission):
+    """Submit answers and receive score"""
+    result = submit_quiz(quiz_id, submission)
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
+
+
+# ————————————————————————
+# OPTIONAL: Seed Sample Quiz (Keep for testing)
+# ————————————————————————
 @app.on_event("startup")
 def seed_sample_quiz():
     sample_quiz = {
@@ -49,19 +93,9 @@ def seed_sample_quiz():
         upsert=True
     )
     print("Sample quiz seeded.")
-
-# GET: Fetch quiz
-@app.get("/quizzes/{quiz_id}", response_model=Quiz)
-def fetch_quiz(quiz_id: str):
-    quiz = get_quiz(quiz_id)
-    if not quiz:
-        raise HTTPException(status_code=404, detail="Quiz not found")
-    return quiz
-
-# POST: Submit answers
-@app.post("/quizzes/{quiz_id}/submit")
-def submit_answers(quiz_id: str, submission: Submission):
-    result = submit_quiz(quiz_id, submission)
-    if "error" in result:
-        raise HTTPException(status_code=404, detail=result["error"])
-    return result
+@app.post("/quizzes", response_model=Quiz, status_code=status.HTTP_201_CREATED)
+def create_quiz(payload: CreateQuizPayload):
+    quiz_id = str(uuid.uuid4())[:8] 
+    doc = {"id": quiz_id, **payload.dict()}
+    quizzes.insert_one(doc)
+    return Quiz(**doc)
