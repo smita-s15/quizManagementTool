@@ -1,6 +1,18 @@
 // lib/api.ts
+import axios from "axios";
+
 const API_BASE = "http://localhost:8000";
 
+const api = axios.create({
+  baseURL: API_BASE,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// ————————————————————————
+// Types
+// ————————————————————————
 export interface Question {
   text: string;
   type: "mcq" | "truefalse" | "text";
@@ -22,34 +34,59 @@ export interface SubmitResult {
   percentage: number;
 }
 
-// CREATE QUIZ
+// ————————————————————————
+// API Functions (Axios)
+// ————————————————————————
+
+// 1. CREATE QUIZ
 export const createQuiz = async (payload: CreateQuizPayload): Promise<Quiz> => {
-  const res = await fetch(`${API_BASE}/quizzes`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error((await res.json()).detail || "Failed to create");
-  return res.json();
+  try {
+    const res = await api.post<Quiz>("/quizzes", payload);
+    return res.data;
+  } catch (err: any) {
+    const message =
+      err.response?.data?.detail || err.message || "Failed to create quiz";
+    throw new Error(message);
+  }
 };
 
-// GET ALL QUIZZES
+// 2. GET ALL QUIZZES
 export const getQuizzes = async (): Promise<Quiz[]> => {
-  const res = await fetch(`${API_BASE}/quizzes`);
-  if (!res.ok) throw new Error("Failed to fetch quizzes");
-  return res.json();
+  try {
+    const res = await api.get<Quiz[]>("/quizzes");
+    return res.data;
+  } catch (err: any) {
+    const message =
+      err.response?.data?.detail || err.message || "Failed to load quizzes";
+    throw new Error(message);
+  }
 };
 
-// SUBMIT QUIZ
+// 3. GET ONE QUIZ
+export const getQuiz = async (quizId: string): Promise<Quiz> => {
+  try {
+    const res = await api.get<Quiz>(`/quizzes/${quizId}`);
+    return res.data;
+  } catch (err: any) {
+    const message =
+      err.response?.data?.detail || err.message || "Quiz not found";
+    throw new Error(message);
+  }
+};
+
+// 4. SUBMIT QUIZ
 export const submitQuiz = async (
   quizId: string,
   answers: string[]
 ): Promise<SubmitResult> => {
-  const res = await fetch(`${API_BASE}/quizzes/${quizId}/submit`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ answers }),
-  });
-  if (!res.ok) throw new Error("Submission failed");
-  return res.json();
+  try {
+    const res = await api.post<SubmitResult>(`/quizzes/${quizId}/submit`, {
+      answers,
+    });
+    return res.data;
+  } catch (err: any) {
+    const message =
+      err.response?.data?.detail || err.message || "Submission failed";
+    throw new Error(message);
+  }
 };

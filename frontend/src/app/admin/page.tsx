@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import QuestionForm from "../../components/QuestionForm";
 import { CreateQuizPayload, Question, Quiz } from "../../types/quiz";
 import { createQuiz } from "@/lib/api";
+import Link from "next/link";
 
 export default function AdminPanel() {
   const [quizTitle, setQuizTitle] = useState("");
@@ -64,7 +65,6 @@ export default function AdminPanel() {
           <h1 className="text-4xl font-bold text-center text-indigo-700 mb-8">
             Admin Panel – Create Quiz
           </h1>
-
           {/* Quiz Title */}
           <div className="mb-8">
             <label className="block text-lg font-semibold text-gray-800 mb-2">
